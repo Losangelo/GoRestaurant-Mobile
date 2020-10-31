@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Image, ScrollView } from 'react-native';
 
 import Icon from 'react-native-vector-icons/Feather';
@@ -50,32 +50,45 @@ const Dashboard: React.FC = () => {
     number | undefined
   >();
   const [searchValue, setSearchValue] = useState('');
-
   const navigation = useNavigation();
 
-  async function handleNavigate(id: number): Promise<void> {
-    // Navigate do ProductDetails page
-  }
+   const handleNavigate = useCallback(
+    async (id: number) => {
+      navigation.navigate('FoodDetails', { id });
+    },
+    [navigation],
+  );
+
 
   useEffect(() => {
-    async function loadFoods(): Promise<void> {
-      // Load Foods from API
-    }
+    async function loadDashboard(): Promise<void> {
+      const foodsResponse = await api.get('/foods', {
+        params: {
+          category_like: selectedCategory,
+          name_like: searchValue,
+        },
+      });
 
-    loadFoods();
+      const categoriesResponse = await api.get('/categories');
+
+      setCategories(categoriesResponse.data);
+      setFoods(
+        foodsResponse.data.map((food: Food) => ({
+          ...food,
+          formattedPrice: formatValue(food.price),
+        })),
+      );
+    }
+    loadDashboard();
   }, [selectedCategory, searchValue]);
 
-  useEffect(() => {
-    async function loadCategories(): Promise<void> {
-      // Load categories from API
-    }
-
-    loadCategories();
-  }, []);
-
   function handleSelectCategory(id: number): void {
-    // Select / deselect category
-  }
+    if (selectedCategory === id) {
+      setSelectedCategory(undefined);
+    } else {
+      setSelectedCategory(id);
+    }
+  };
 
   return (
     <Container>
